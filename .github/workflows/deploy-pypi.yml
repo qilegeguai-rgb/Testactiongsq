@@ -25,7 +25,8 @@ jobs:
       - name: Get previous tag
         id: prev_tag
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $GITHUB_SHA^)
+          # 尝试获取前一个标签
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $GITHUB_SHA^ 2>/dev/null || echo "v0.0.0")
           echo "Previous tag: $PREVIOUS_TAG"
           echo "::set-output name=previous_tag::$PREVIOUS_TAG"
 
