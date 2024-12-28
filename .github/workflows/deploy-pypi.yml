@@ -111,7 +111,7 @@ jobs:
     runs-on: ${{ matrix.os }}  # 使用矩阵策略，分别在不同操作系统上运行
     strategy:
       matrix:
-        os: [windows-2022, macos-13, macos-14]  # 在 Windows 和 macOS 上部署
+        os: [windows-2022, macos-13]  # 在 Windows 和 macOS 上部署
 
     env:
       PYSIDE6_LEGACY_VERSION: "6.4.3"  # 设置环境变量，指定老版本的 PySide6
@@ -135,22 +135,21 @@ jobs:
         uses: actions/setup-python@v4  # 设置 Python 环境
         with:
           python-version: "3.12"  # 使用 Python 3.12
-          check-latest: true  # 检查是否是最新版本
 
       # 4. 创建并激活 Python 虚拟环境
       - name: Set up Python venv
         run: |
-          python3 -m venv .venv  # 创建虚拟环境
+          python3 -m venv .venv 
           if [ "$RUNNER_OS" == "macOS" ]; then
-            source .venv/bin/activate  # macOS 上激活虚拟环境
+            source .venv/bin/activate  
           elif [ "$RUNNER_OS" == "Windows" ]; then
-            .venv/Scripts/activate  # Windows 上激活虚拟环境
+            .venv/Scripts/activate  
           else
-            echo "$RUNNER_OS not supported"  # 如果是其他操作系统则退出
+            echo "$RUNNER_OS not supported"  
             exit 1
           fi
-          python3 --version  # 查看 Python 版本
-          python3 -m pip install --upgrade pip  # 升级 pip
+          python3 --version 
+          python3 -m pip install --upgrade pip  
 
 #      # 5. 安装 macOS 特定的依赖
 #      - name: Install macOS dependencies
@@ -186,10 +185,10 @@ jobs:
 #          # 安装 numpy 版本小于 2 的版本，以确保兼容性
 #          python3 -m pip install "numpy<2"
 #
-#      - name: Install nuitka, imageio
-#        run: |
-#          # 安装 Nuitka 和 imageio，Nuitka 用于将 Python 代码编译成二进制文件，imageio 用于图像处理
-#          python3 -m pip install nuitka imageio
+      - name: Install nuitka, imageio
+        run: |
+          # 安装 Nuitka 和 imageio，Nuitka 用于将 Python 代码编译成二进制文件，imageio 用于图像处理
+          python3 -m pip install nuitka imageio
 #
 #      - name: Set up go 1.20
 #        uses: actions/setup-go@v4
@@ -253,11 +252,11 @@ jobs:
         uses: actions/checkout@v3
 
       # 下载之前上传到 GitHub Actions 的二进制文件分发包
-#      - name: Download all the dists
-#        uses: actions/download-artifact@v3
-#        with:
-#          name: binary-distributions
-#          path: dist/
+      - name: Download all the dists
+        uses: actions/download-artifact@v3
+        with:
+          name: binary-distributions
+          path: dist/
 
 
       # 使用 git log 自动生成 Release Notes
