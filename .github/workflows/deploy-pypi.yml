@@ -66,17 +66,17 @@ jobs:
 #          python3 Deploy.py --download  # 执行自定义的 Deploy.py 脚本下载资产
 
       # 9. 构建源代码包和二进制包
-      - name: Build a binary wheel and a source tarball
-        run: python3 setup.py sdist bdist_wheel  # 构建源代码包和 wheel 包
+#      - name: Build a binary wheel and a source tarball
+#        run: python3 setup.py sdist bdist_wheel  # 构建源代码包和 wheel 包
 
       # 10. 上传构建的包为工件
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v3  # 使用 GitHub 的 upload-artifact action 上传构建的包
-        with:
-          name: python-package-distributions  # 上传的包名
-          path: |
-            dist/*.tar.gz  # 包含所有 .tar.gz 格式的源代码包
-            dist/*.whl  # 包含所有 .whl 格式的二进制包
+#      - name: Store the distribution packages
+#        uses: actions/upload-artifact@v3  # 使用 GitHub 的 upload-artifact action 上传构建的包
+#        with:
+#          name: python-package-distributions  # 上传的包名
+#          path: |
+#            dist/*.tar.gz  # 包含所有 .tar.gz 格式的源代码包
+#            dist/*.whl  # 包含所有 .whl 格式的二进制包
 
   # 作业2：将包发布到 PyPI
   publish-to-pypi:
@@ -220,18 +220,18 @@ jobs:
 #          python3 -m pip install "Xray-core >= 1.8.8" "hysteria2 >= 2.0.4" "tun2socks > 2.5.2"
 
 
-      - name: Run deploy script
-        run: python3 Deploy.py
+#      - name: Run deploy script
+#        run: python3 Deploy.py
         # 执行部署脚本，开始部署最新的版本
 
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v3
-        with:
-          name: binary-distributions
-          path: |
-            # 上传二进制分发包到 GitHub，以便在发布时使用
-            *.zip
-            *.dmg
+#      - name: Store the distribution packages
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: binary-distributions
+#          path: |
+#            # 上传二进制分发包到 GitHub，以便在发布时使用
+#            *.zip
+#            *.dmg
 
   github-release:
     name: >-
