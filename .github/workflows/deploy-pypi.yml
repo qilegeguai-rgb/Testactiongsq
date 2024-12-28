@@ -250,5 +250,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}  # 使用 GitHub Secrets 中的 RELEASE_TOKEN
         run: >-
           gh release upload
-          '${{ github.ref_name }}' dist/**  # 使用当前标签上传所有构建的文件
-          --repo '${{ github.repository }}'  # 指定当前仓库进行上传
+          '${{ github.ref_name }}' dist/**  
+          --repo '${{ github.repository }}'
