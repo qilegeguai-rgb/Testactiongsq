@@ -85,7 +85,7 @@ jobs:
     strategy:
       matrix:
         # os: [windows-2022, macos-13]  # 在 Windows 和 macOS 上部署
-        os: []
+        os: [windows-2022]
 
     env:
       PYSIDE6_LEGACY_VERSION: "6.4.3"  # 设置环境变量，指定老版本的 PySide6
