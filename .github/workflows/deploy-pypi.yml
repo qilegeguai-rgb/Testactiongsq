@@ -1,10 +1,10 @@
 name: Github Deploy  # 定义工作流的名称
 
-#on: [push]
-on:
-  push:
-    tags:
-      - '*'  # 监听所有标签的推送，或者可以根据需要指定标签模式，如 'v*' 表示所有以 v 开头的标签
+on: [push]
+#on:
+#  push:
+#    tags:
+#      - '*'  # 监听所有标签的推送，或者可以根据需要指定标签模式，如 'v*' 表示所有以 v 开头的标签
 
 defaults:
   run:
