@@ -21,7 +21,7 @@ class MyWindow(QWidget):
 
     def on_button_click(self):
         # 当按钮被点击时调用这个方法
-        print('按钮被点击了！')
+        print('按钮被点击了！1')
 
 
 if __name__ == '__main__':
