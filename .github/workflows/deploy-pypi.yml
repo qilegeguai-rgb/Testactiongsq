@@ -1,10 +1,7 @@
 name: Github Deploy  # 定义工作流的名称
 
 on: [push]
-#on:
-#  push:
-#    tags:
-#      - '*'  # 监听所有标签的推送，或者可以根据需要指定标签模式，如 'v*' 表示所有以 v 开头的标签
+
 
 defaults:
   run:
@@ -20,7 +17,6 @@ jobs:
       # 1. Checkout 仓库代码
       - uses: actions/checkout@v4  # 使用 GitHub 官方的 checkout action 来拉取代码
 
-
       # 3. 设置 Python 环境
       - name: Set up Python
         uses: actions/setup-python@v4  # 使用 setup-python action 来设置 Python 环境
@@ -35,11 +31,6 @@ jobs:
           python3 --version  
           python3 -m pip install --upgrade pip  
 
-      # 5. 安装系统依赖：libegl1
-#      - name: Install libegl1
-#        run: |
-#          sudo apt update && sudo apt install -y libegl1  # 安装 libegl1，可能是依赖某些图形库
-
       # 6. 安装 setuptools 和 wheel
       - name: Install setuptools, wheel
         run: |
@@ -50,15 +41,6 @@ jobs:
         run: |
           python3 -m pip install -r requirements.txt  # 安装项目依赖
 
-      # 8. 下载最新的资产文件
-#      - name: Download latest asset files
-#        run: |
-#          python3 -m pip install requests  # 安装 requests 库
-#          python3 Deploy.py --download  # 执行自定义的 Deploy.py 脚本下载资产
-
-      # 9. 构建源代码包和二进制包
-#      - name: Build a binary wheel and a source tarball
-#        run: python3 setup.py sdist bdist_wheel  # 构建源代码包和 wheel 包
 
       # 10. 上传构建的包为工件
       - name: Store the distribution packages
@@ -112,20 +94,12 @@ jobs:
       # 1. Checkout 仓库代码
       - uses: actions/checkout@v4  # 使用 checkout action 拉取代码
 
-      # 2. 缓存 Python 依赖项
-      - name: Cache Python dependencies
-        uses: actions/cache@v3  # 使用缓存加速依赖安装
-        with:
-          path: ~/.cache/pip  # 缓存路径
-          key: ${{ runner.os }}-pip-cache-${{ hashFiles('**/requirements.txt') }}  # 缓存键
-          restore-keys: |
-            ${{ runner.os }}-pip-cache-  # 备份的缓存键
 
       # 3. 设置 Python 环境
       - name: Set up Python
-        uses: actions/setup-python@v4  # 设置 Python 环境
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.12"  # 使用 Python 3.12
+          python-version: "3.12"
 
       # 4. 创建并激活 Python 虚拟环境
       - name: Set up Python venv
@@ -139,21 +113,20 @@ jobs:
             echo "$RUNNER_OS not supported"  
             exit 1
           fi
-          python3 --version 
-          python3 -m pip install --upgrade pip  
+          python3 --version   
 
-#      # 5. 安装 macOS 特定的依赖
-#      - name: Install macOS dependencies
-#        run: |
-#          brew install create-dmg  # 在 macOS 上安装 create-dmg
-#        if: runner.os == 'macOS'  # 仅在 macOS 上执行
-#
-#      # 6. 移除 macOS Intel 架构上的问题依赖
-#      - name: Remove problematic brew libs on Intel Mac
-#        run: |
-#          brew remove --force --ignore-dependencies openssl@3  # 移除过期的 OpenSSL 库
-#          brew cleanup openssl@3  # 清理依赖
-#        if: runner.os == 'macOS' && runner.arch == 'X64'  # 仅在 Intel 架构的 macOS 上执行
+      # 5. 安装 macOS 特定的依赖
+      - name: Install macOS dependencies
+        run: |
+          brew install create-dmg  # 在 macOS 上安装 create-dmg
+        if: runner.os == 'macOS'  # 仅在 macOS 上执行
+
+      # 6. 移除 macOS Intel 架构上的问题依赖
+      - name: Remove problematic brew libs on Intel Mac
+        run: |
+          brew remove --force --ignore-dependencies openssl@3  # 移除过期的 OpenSSL 库
+          brew cleanup openssl@3  # 清理依赖
+        if: runner.os == 'macOS' && runner.arch == 'X64'  # 仅在 Intel 架构的 macOS 上执行
 
       # 7. 安装 setuptools 和 wheel
       - name: Install setuptools, wheel
@@ -163,12 +136,12 @@ jobs:
       # 8. 安装 PySide6-Essentials
       - name: Install PySide6-Essentials
         run: |
-          python3 -m pip install PySide6-Essentials==$PYSIDE6_TARGET_VERSION  # 安装指定版本的 PySide6
+          python3 -m pip install PySide6-Essentials==$PYSIDE6_TARGET_VERSION 
 
       # 9. 安装项目依赖
       - name: Install requirements.txt
         run: |
-          python3 -m pip install -r requirements.txt  # 安装项目依赖
+          python3 -m pip install -r requirements.txt
 #
 #      # 10. 安装 numpy<2
 #      - name: Install numpy<2
@@ -178,7 +151,6 @@ jobs:
 #
       - name: Install nuitka, imageio
         run: |
-          # 安装 Nuitka 和 imageio，Nuitka 用于将 Python 代码编译成二进制文件，imageio 用于图像处理
           python3 -m pip install nuitka imageio
 #
 #      - name: Set up go 1.20
@@ -219,7 +191,6 @@ jobs:
         with:
           name: binary-distributions
           path: |
-            # 上传二进制分发包到 GitHub，以便在发布时使用
             *.zip
             *.dmg
 
