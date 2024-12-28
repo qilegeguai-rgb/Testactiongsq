@@ -81,6 +81,7 @@ jobs:
   # 作业3：在多个操作系统上部署二进制文件
   deploy-binaries:
     name: Deploy binaries on ${{ matrix.os }}  # 设置作业名称
+    if: false
     runs-on: ${{ matrix.os }}  # 使用矩阵策略，分别在不同操作系统上运行
     strategy:
       matrix:
@@ -198,8 +199,8 @@ jobs:
   github-release:
     name: >-
       Upload to GitHub Release
-    needs:
-      - deploy-binaries
+#    needs:
+#      - deploy-binaries
       # 依赖于 deploy-binaries 作业，即所有二进制文件都已准备好后才能执行
       # - publish-to-pypi  # 如果需要将发布内容上传到 PyPI，取消此行注释
     runs-on: ubuntu-latest
@@ -228,6 +229,7 @@ jobs:
         run: |
           echo "## 🚀 Release Notes" > release_notes.md
           git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
+          cat release_notes.md
         shell: bash
 
       # 在创建 Release 时使用动态生成的 Release Notes
