@@ -245,10 +245,10 @@ jobs:
 #          draft: false  # 设置为 false，表示不是草稿
 #          prerelease: false  # 设置为 false，表示不是预发布
 
-      - name: Upload artifact to GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}  # 使用 GitHub Secrets 中的 RELEASE_TOKEN
-        run: >-
-          gh release upload
-          '${{ github.ref_name }}' dist/**
-          --repo '${{ github.repository }}'
+#      - name: Upload artifact to GitHub Release
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}  # 使用 GitHub Secrets 中的 RELEASE_TOKEN
+#        run: >-
+#          gh release upload
+#          '${{ github.ref_name }}' dist/**
+#          --repo '${{ github.repository }}'
