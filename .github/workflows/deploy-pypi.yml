@@ -1,6 +1,6 @@
 name: Github Deploy  # 定义工作流的名称
 
-# on: [push, pull_request]
+#on: [push]
 on:
   push:
     tags:
@@ -252,12 +252,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 下载之前上传到 GitHub Actions 的二进制文件分发包
       - name: Download all the dists
         uses: actions/download-artifact@v3
         with:
           name: binary-distributions
           path: dist/
-        # 下载之前上传到 GitHub Actions 的二进制文件分发包
+
 
       # 使用 git log 自动生成 Release Notes
       - name: Generate Release Notes
