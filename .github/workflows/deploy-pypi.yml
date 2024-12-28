@@ -285,7 +285,7 @@ jobs:
     - uses: butlerlogic/action-autotag@1.1.2
       if: ${{ env.NEW_TAG_FLAG != '0' }}
       env:
-        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
       with:
         strategy: regex
         root: pyproject.toml
