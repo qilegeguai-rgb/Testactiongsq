@@ -12,11 +12,6 @@ jobs:
       id-token: write  # IMPORTANT: mandatory for sigstore
 
     steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v3
-        with:
-          name: binary-distributions
-          path: dist/
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
