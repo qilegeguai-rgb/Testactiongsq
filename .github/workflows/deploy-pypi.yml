@@ -1,6 +1,9 @@
 name: Github Deploy  # 定义工作流的名称
 
-on: [push]
+on:
+  push:
+    tags:
+      - '*'  # 监听所有标签的推送，或者可以根据需要指定标签模式，如 'v*' 表示所有以 v 开头的标签
 
 
 defaults:
@@ -225,9 +228,7 @@ jobs:
       - name: Generate Release Notes
         id: generate_notes
         run: |
-          # 生成发布说明，使用 git log 从上次发布以来的提交信息生成说明
           echo "## 🚀 Release Notes" > release_notes.md
-          # 生成自上次标签以来的提交日志，格式为：- commit_message (by author_name)
           git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
         shell: bash
 
@@ -248,7 +249,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}  # 使用 GitHub Secrets 中的 RELEASE_TOKEN
         run: >-
-          # 使用 GitHub CLI 上传构建的二进制文件到 GitHub Release
           gh release upload
           '${{ github.ref_name }}' dist/**  # 使用当前标签上传所有构建的文件
           --repo '${{ github.repository }}'  # 指定当前仓库进行上传
