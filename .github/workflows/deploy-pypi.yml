@@ -230,6 +230,7 @@ jobs:
           git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
           echo "git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:'- %s (by %an)'"
           cat release_notes.md  
+          echo git describe --tags --abbrev=0
           echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV
         shell: bash
 
