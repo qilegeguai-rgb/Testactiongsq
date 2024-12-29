@@ -227,7 +227,7 @@ jobs:
           # 获取当前最近的标签
           CURRENT_TAG=$(git describe --tags --abbrev=0)
           # 获取当前标签之前的标签
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^)
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^2)
           # 获取 HEAD 提交哈希
           CURRENT_COMMIT=$(git rev-parse HEAD)
           # 获取当前标签的提交哈希
