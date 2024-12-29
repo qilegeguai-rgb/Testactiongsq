@@ -223,46 +223,68 @@ jobs:
       # 使用 git log 自动生成 Release Notes, 生成发布说明并设置为环境变量
       - name: Generate Release Notes
         id: generate_notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          # 初始化 Release Notes 变量
-          RELEASE_NOTES="## 🚀 Release Notes\n"
-
-          # 获取所有标签并按创建时间排序
-          TAGS=$(git tag --sort=-creatordate)
-
-          # 获取最新的标签
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          # 获取上一个标签
-          PREVIOUS_TAG=$(echo "$TAGS" | sed -n '2p')
-
-          echo "$TAGS"
-          echo "$LATEST_TAG"
-          echo "$PREVIOUS_TAG"
+          # 获取当前最近的标签
+          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          # 获取当前标签之前的标签
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^ 2>/dev/null || echo "")
+          # 获取 HEAD 提交哈希
+          CURRENT_COMMIT=$(git rev-parse HEAD)
+          # 获取当前标签的提交哈希
+          TAG_COMMIT=$(git rev-list -n 1 $CURRENT_TAG 2>/dev/null || echo "")
           
-          # 检查是否有上一个标签
+          echo "Current Tag: $CURRENT_TAG"
+          echo "Previous Tag: $PREVIOUS_TAG"
+          echo "Current Commit: $CURRENT_COMMIT"
+          echo "Tag Commit: $TAG_COMMIT"
+          
+          # 开始生成 Release Notes
+          if [ "$CURRENT_COMMIT" = "$TAG_COMMIT" ]; then
+          # 如果 HEAD 和 Tag 是同一个
           if [ -z "$PREVIOUS_TAG" ]; then
-            echo "No previous tag found. Generating release notes from the beginning."
-            RELEASE_NOTES="$RELEASE_NOTES$(git log --reverse --pretty=format:"- %s (by %an)\n")"
+           # 当前 Tag 是第一个 Tag
+           echo "## 🚀 Release Notes for $CURRENT_TAG" > release_notes.md
+           git log --reverse --pretty=format:"- %s (by %an)" $CURRENT_TAG >> release_notes.md
           else
-            echo "Generating release notes from tag $PREVIOUS_TAG to $LATEST_TAG"
-            # 获取上一个标签到当前标签之间的提交并附加到变量 RELEASE_NOTES
-            RELEASE_NOTES="$RELEASE_NOTES$(git log $PREVIOUS_TAG..$LATEST_TAG --reverse --pretty=format:"- %s (by %an)\n")"
+           # 显示当前 Tag 和上一个 Tag 之间的变更
+           echo "## 🚀 Release Notes for $CURRENT_TAG" > release_notes.md
+           git log $PREVIOUS_TAG..$CURRENT_TAG --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
           fi
+          else
+          # 如果 HEAD 和 Tag 不同，仅显示当前 HEAD 的变更
+          echo "## 🚀 Release Notes for Current Changes (HEAD)" > release_notes.md
+          git log -n 1 HEAD --pretty=format:"- %s (by %an)" >> release_notes.md
+          fi
+          
+          # 打印生成的日志
+          cat release_notes.md
+          
+          # 设置环境变量
+          echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV
+          
+          # 打印 RELEASE_NOTES
+          - name: Print RELEASE_NOTES
+            run: |
+              echo "${{ env.RELEASE_NOTES }}"
+          
+          # 创建 Release
+          - name: Create GitHub Release
+            if: startsWith(github.ref, 'refs/tags/')  # 仅在 Tag 推送时创建 Release
+            uses: actions/create-release@v1.1.0
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            with:
+              tag_name: ${{ github.ref_name }}
+              release_name: Release ${{ github.ref_name }}
+              body: ${{ env.RELEASE_NOTES }}
+              draft: false
+              prerelease: false
 
-          # 打印生成的 release notes
-          echo "$RELEASE_NOTES"
-
-          # 将生成的 Release Notes 存入 GitHub 环境变量
-          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
-        shell: bash
-
-      # 打印 RELEASE_NOTES 的值
-      - name: Print RELEASE_NOTES
-        run: |
-          echo "Release Notes are as follows:"
-          echo "${{ env.RELEASE_NOTES }}"  # 正确引用环境变量
+#      # 打印 RELEASE_NOTES 的值
+#      - name: Print RELEASE_NOTES
+#        run: |
+#          echo "Release Notes are as follows:"
+#          echo "${{ env.RELEASE_NOTES }}"  # 正确引用环境变量
 
       # 在创建 Release 时使用动态生成的 Release Notes
 #      - name: Create GitHub Release
