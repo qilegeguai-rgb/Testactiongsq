@@ -224,10 +224,11 @@ jobs:
       - name: Generate Release Notes
         id: generate_notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           echo "## 🚀 Release Notes" > release_notes.md
           git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
+          echo "git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:'- %s (by %an)'"
           cat release_notes.md  
           echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV
         shell: bash
