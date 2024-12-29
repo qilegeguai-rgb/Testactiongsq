@@ -227,8 +227,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           echo "## 🚀 Release Notes" > release_notes.md
-          git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
-          echo "git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:'- %s (by %an)'"
+          ssss=$(git describe --tags --abbrev=0)
+          git log $(ssss)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
+
           cat release_notes.md  
           git describe --tags --abbrev=0
           
