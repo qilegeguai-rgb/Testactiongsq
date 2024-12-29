@@ -237,6 +237,10 @@ jobs:
           # 获取上一个标签
           PREVIOUS_TAG=$(echo "$TAGS" | sed -n '2p')
 
+          echo "$TAGS"
+          echo "$LATEST_TAG"
+          echo "$PREVIOUS_TAG"
+          
           # 检查是否有上一个标签
           if [ -z "$PREVIOUS_TAG" ]; then
             echo "No previous tag found. Generating release notes from the beginning."
