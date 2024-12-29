@@ -224,25 +224,35 @@ jobs:
       - name: Generate Release Notes
         id: generate_notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          # 获取当前标签
-          LATEST_TAG=$(git describe --tags --abbrev=0)
-          
-          # 获取上一个标签，如果没有找到标签，使用 "none"
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^)
-          
-          # 判断是否找到上一个标签
-          if [ "$PREVIOUS_TAG" ]; then
-            echo "Generating release notes from $PREVIOUS_TAG to $LATEST_TAG"
-            RELEASE_NOTES="## 🚀 Release Notes\n$(git log $PREVIOUS_TAG..$LATEST_TAG --reverse --pretty=format:"- %s (by %an)\n")"
-          else
+          # 初始化 Release Notes 变量
+          RELEASE_NOTES="## 🚀 Release Notes\n"
+
+          # 获取所有标签并按创建时间排序
+          TAGS=$(git tag --sort=-creatordate)
+
+          # 获取最新的标签
+          LATEST_TAG=$(echo "$TAGS" | head -n 1)
+          # 获取上一个标签
+          PREVIOUS_TAG=$(echo "$TAGS" | sed -n '2p')
+
+          # 检查是否有上一个标签
+          if [ -z "$PREVIOUS_TAG" ]; then
             echo "No previous tag found. Generating release notes from the beginning."
-            RELEASE_NOTES="## 🚀 Release Notes\n$(git log --reverse --pretty=format:"- %s (by %an)\n")"
+            RELEASE_NOTES="$RELEASE_NOTES$(git log --reverse --pretty=format:"- %s (by %an)\n")"
+          else
+            echo "Generating release notes from tag $PREVIOUS_TAG to $LATEST_TAG"
+            # 获取上一个标签到当前标签之间的提交并附加到变量 RELEASE_NOTES
+            RELEASE_NOTES="$RELEASE_NOTES$(git log $PREVIOUS_TAG..$LATEST_TAG --reverse --pretty=format:"- %s (by %an)\n")"
           fi
-          
-          # 将发布说明存储到环境变量
+
+          # 打印生成的 release notes
+          echo "$RELEASE_NOTES"
+
+          # 将生成的 Release Notes 存入 GitHub 环境变量
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
+        shell: bash
 
       # 打印 RELEASE_NOTES 的值
       - name: Print RELEASE_NOTES
