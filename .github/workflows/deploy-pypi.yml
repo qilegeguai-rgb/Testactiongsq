@@ -220,41 +220,47 @@ jobs:
 #          path: dist/
 
 
+      # 使用 git log 自动生成 Release Notes, 生成发布说明并设置为环境变量
       - name: Generate Release Notes
         id: generate_notes
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 初始化 Release Notes 变量
-          RELEASE_NOTES="## 🚀 Release Notes\n"
-      
-          # 检查是否有标签
+          # 获取当前标签
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
-      
-          # 如果有标签，则获取标签之间的提交，否则直接从 HEAD 开始
-          if [ "$LATEST_TAG" != "none" ]; then
-            echo "Generating release notes from tag $LATEST_TAG to HEAD"
-            # 获取标签到 HEAD 之间的提交并附加到变量 RELEASE_NOTES
-            RELEASE_NOTES="$RELEASE_NOTES$(git log $LATEST_TAG..HEAD --reverse --pretty=format:"- %s (by %an)\n")"
+          
+          # 获取上一个标签，如果没有找到标签，使用 "none"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^ 2>/dev/null || echo "none")
+          
+          # 判断是否找到上一个标签
+          if [ "$PREVIOUS_TAG" ]; then
+            echo "Generating release notes from $PREVIOUS_TAG to $LATEST_TAG"
+            RELEASE_NOTES="## 🚀 Release Notes\n$(git log $PREVIOUS_TAG..$LATEST_TAG --reverse --pretty=format:"- %s (by %an)\n")"
           else
-            echo "No tags found. Generating release notes from the beginning."
-            # 如果没有标签，则从所有提交开始生成 Release Notes
-            RELEASE_NOTES="$RELEASE_NOTES$(git log --reverse --pretty=format:"- %s (by %an)\n")"
+            echo "No previous tag found. Generating release notes from the beginning."
+            RELEASE_NOTES="## 🚀 Release Notes\n$(git log --reverse --pretty=format:"- %s (by %an)\n")"
           fi
-      
-          # 打印生成的 release notes
-          echo "$RELEASE_NOTES"
-      
-          # 将生成的 Release Notes 存入 GitHub 环境变量
+          
+          # 将发布说明存储到环境变量
           echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
-        shell: bash
 
       # 打印 RELEASE_NOTES 的值
       - name: Print RELEASE_NOTES
         run: |
           echo "Release Notes are as follows:"
           echo "${{ env.RELEASE_NOTES }}"  # 正确引用环境变量
-        
+
+      # 在创建 Release 时使用动态生成的 Release Notes
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1.1.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}  # 使用当前标签名
+          release_name: Release ${{ github.ref_name }}  # Release 的名称
+          body: ${{ env.RELEASE_NOTES }}  # 使用环境变量作为发布说明
+          draft: false  # 设置为 false，表示不是草稿
 
       # 在创建 Release 时使用动态生成的 Release Notes
 #      - name: Create GitHub Release
