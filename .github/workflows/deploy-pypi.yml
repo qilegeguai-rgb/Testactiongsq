@@ -227,10 +227,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 获取当前标签
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          LATEST_TAG=$(git describe --tags --abbrev=0 || echo "none")
           
           # 获取上一个标签，如果没有找到标签，使用 "none"
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^ 2>/dev/null || echo "none")
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^ || echo "none")
           
           # 判断是否找到上一个标签
           if [ "$PREVIOUS_TAG" ]; then
