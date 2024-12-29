@@ -220,20 +220,18 @@ jobs:
 #          path: dist/
 
 
-      # 使用 git log 自动生成 Release Notes
+        # 使用 git log 自动生成 Release Notes,生成发布说明并设置为环境变量
       - name: Generate Release Notes
         id: generate_notes
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "## 🚀 Release Notes" > release_notes.md
-          cat release_notes.md  
-          git describe --tags --abbrev=0
-          
-          echo "RELEASE_NOTES=$(git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)")"
-        shell: bash
+          git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
+          cat release_notes.md  # 打印 release_notes.md 文件内容
+          echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV  # 将内容写入环境变量
 
-        # 打印 RELEASE_NOTES 的值
+      # 打印 RELEASE_NOTES 的值
       - name: Print RELEASE_NOTES
         run: |
           echo "Release Notes are as follows:"
