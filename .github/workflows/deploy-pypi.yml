@@ -210,7 +210,7 @@ jobs:
     steps:
       # 确保 Git 仓库已经被检出
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # 下载之前上传到 GitHub Actions 的二进制文件分发包
 #      - name: Download all the dists
