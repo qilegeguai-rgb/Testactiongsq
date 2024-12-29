@@ -225,13 +225,13 @@ jobs:
         id: generate_notes
         run: |
           # 获取当前最近的标签
-          CURRENT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          CURRENT_TAG=$(git describe --tags --abbrev=0)
           # 获取当前标签之前的标签
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^ 2>/dev/null || echo "")
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^)
           # 获取 HEAD 提交哈希
           CURRENT_COMMIT=$(git rev-parse HEAD)
           # 获取当前标签的提交哈希
-          TAG_COMMIT=$(git rev-list -n 1 $CURRENT_TAG 2>/dev/null || echo "")
+          TAG_COMMIT=$(git rev-list -n 1 $CURRENT_TAG )
           
           echo "Current Tag: $CURRENT_TAG"
           echo "Previous Tag: $PREVIOUS_TAG"
