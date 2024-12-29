@@ -227,13 +227,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           echo "## 🚀 Release Notes" > release_notes.md
-          ssss=$(git describe --tags --abbrev=0)
-          git log $(ssss)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
-
           cat release_notes.md  
           git describe --tags --abbrev=0
           
-          echo "RELEASE_NOTES=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+          echo "RELEASE_NOTES=$(git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)")" >> $GITHUB_ENV
         shell: bash
 
         # 打印 RELEASE_NOTES 的值
