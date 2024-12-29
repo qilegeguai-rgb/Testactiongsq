@@ -224,13 +224,9 @@ jobs:
       - name: Generate Release Notes
         id: generate_notes
         run: |
-          # 获取当前最近的标签
           CURRENT_TAG=$(git describe --tags --abbrev=0)
-          # 获取当前标签之前的标签
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 $CURRENT_TAG^)
-          # 获取 HEAD 提交哈希
           CURRENT_COMMIT=$(git rev-parse HEAD)
-          # 获取当前标签的提交哈希
           TAG_COMMIT=$(git rev-list -n 1 $CURRENT_TAG )
           
           echo "Current Tag: $CURRENT_TAG"
@@ -238,20 +234,15 @@ jobs:
           echo "Current Commit: $CURRENT_COMMIT"
           echo "Tag Commit: $TAG_COMMIT"
           
-          # 开始生成 Release Notes
           if [ "$CURRENT_COMMIT" = "$TAG_COMMIT" ]; then
-          # 如果 HEAD 和 Tag 是同一个
           if [ -z "$PREVIOUS_TAG" ]; then
-           # 当前 Tag 是第一个 Tag
            echo "## 🚀 Release Notes for $CURRENT_TAG" > release_notes.md
            git log --reverse --pretty=format:"- %s (by %an)" $CURRENT_TAG >> release_notes.md
           else
-           # 显示当前 Tag 和上一个 Tag 之间的变更
            echo "## 🚀 Release Notes for $CURRENT_TAG" > release_notes.md
            git log $PREVIOUS_TAG..$CURRENT_TAG --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
           fi
           else
-          # 如果 HEAD 和 Tag 不同，仅显示当前 HEAD 的变更
           echo "## 🚀 Release Notes for Current Changes (HEAD)" > release_notes.md
           git log -n 1 HEAD --pretty=format:"- %s (by %an)" >> release_notes.md
           fi
