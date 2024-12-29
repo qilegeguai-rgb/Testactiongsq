@@ -231,7 +231,8 @@ jobs:
           echo "git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:'- %s (by %an)'"
           cat release_notes.md  
           git describe --tags --abbrev=0
-          echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV
+          
+          echo "RELEASE_NOTES=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
         shell: bash
 
         # 打印 RELEASE_NOTES 的值
