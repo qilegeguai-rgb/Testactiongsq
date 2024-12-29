@@ -11,6 +11,7 @@ jobs:
   # 作业1：构建并打包 Python 分发包
   build-distribution:
     name: Build distribution  # 设置作业名称
+    if: false
     runs-on: ubuntu-latest  # 指定运行环境为最新版本的 Ubuntu
 
     steps:
@@ -199,10 +200,6 @@ jobs:
   github-release:
     name: >-
       Upload to GitHub Release
-    needs:
-      - deploy-binaries
-      # 依赖于 deploy-binaries 作业，即所有二进制文件都已准备好后才能执行
-      # - publish-to-pypi  # 如果需要将发布内容上传到 PyPI，取消此行注释
     runs-on: ubuntu-latest
     # 在 Ubuntu 最新版本的虚拟环境中运行发布作业
 
