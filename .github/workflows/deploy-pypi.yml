@@ -81,11 +81,12 @@ jobs:
   # 作业3：在多个操作系统上部署二进制文件
   deploy-binaries:
     name: Deploy binaries on ${{ matrix.os }}  # 设置作业名称
+    if: false
     runs-on: ${{ matrix.os }}  # 使用矩阵策略，分别在不同操作系统上运行
     strategy:
       matrix:
         # os: [windows-2022, macos-13]  # 在 Windows 和 macOS 上部署
-        os: []
+        os: [windows-2022]
 
     env:
       PYSIDE6_LEGACY_VERSION: "6.4.3"  # 设置环境变量，指定老版本的 PySide6
