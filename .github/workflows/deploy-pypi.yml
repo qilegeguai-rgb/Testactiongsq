@@ -261,16 +261,16 @@ jobs:
           echo "${{ env.RELEASE_NOTES }}"  # 正确引用环境变量
 
       # 在创建 Release 时使用动态生成的 Release Notes
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1.1.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        with:
-          tag_name: ${{ github.ref_name }}  # 使用当前标签名
-          release_name: Release ${{ github.ref_name }}  # Release 的名称
-          body: ${{ env.RELEASE_NOTES }}  # 使用环境变量作为发布说明
-          draft: false  # 设置为 false，表示不是草稿
+#      - name: Create GitHub Release
+#        id: create_release
+#        uses: actions/create-release@v1.1.0
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#        with:
+#          tag_name: ${{ github.ref_name }}  # 使用当前标签名
+#          release_name: Release ${{ github.ref_name }}  # Release 的名称
+#          body: ${{ env.RELEASE_NOTES }}  # 使用环境变量作为发布说明
+#          draft: false  # 设置为 false，表示不是草稿
 
       # 在创建 Release 时使用动态生成的 Release Notes
 #      - name: Create GitHub Release
