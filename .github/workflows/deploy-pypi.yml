@@ -1,42 +1,263 @@
-name: Github Deploy
+name: Github Deploy  # 定义工作流的名称
 
-on:
-  push:
-    tags:
-      - 'v*'  # 仅当推送的是标签时触发工作流
+on: [push, pull_request] # 定义触发条件。这个工作流将在 push 或 pull_request 事件发生时触发。
+
+
+defaults:
+  run:
+    shell: bash  # 默认使用 bash 作为 shell 来执行命令
 
 jobs:
-  github-release:
-    name: Upload to GitHub Release
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write  # 必须权限，用于创建 GitHub Release
-      id-token: write  # 必须权限，用于 sigstore
+  # 作业1：构建并打包 Python 分发包
+  build-distribution:
+    name: Build distribution  # 设置作业名称
+    runs-on: ubuntu-latest  # 指定运行环境为最新版本的 Ubuntu
 
     steps:
-      - name: Checkout repository
+      # 1. Checkout 仓库代码
+      - uses: actions/checkout@v4  # 使用 GitHub 官方的 checkout action 来拉取代码
+
+      # 3. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4  # 使用 setup-python action 来设置 Python 环境
+        with:
+          python-version: "3.12"
+
+      # 4. 创建并激活 Python 虚拟环境
+      - name: Set up Python venv
+        run: |
+          python3 -m venv .venv  
+          source .venv/bin/activate  
+          python3 --version  
+          python3 -m pip install --upgrade pip  
+
+      # 6. 安装 setuptools 和 wheel
+      - name: Install setuptools, wheel
+        run: |
+          python3 -m pip install setuptools wheel  # 安装构建工具 setuptools 和 wheel
+
+      # 7. 安装项目依赖
+      - name: Install requirements.txt
+        run: |
+          python3 -m pip install -r requirements.txt  # 安装项目依赖
+
+
+      # 10. 上传构建的包为工件
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v3  # 使用 GitHub 的 upload-artifact action 上传构建的包
+        with:
+          name: python-package-distributions  # 上传的包名
+          path: |
+            dist/*.tar.gz  # 包含所有 .tar.gz 格式的源代码包
+            dist/*.whl  # 包含所有 .whl 格式的二进制包
+
+  # 作业2：将包发布到 PyPI
+  publish-to-pypi:
+    name: Publish Python distribution to PyPI  # 设置作业名称
+    # if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    if: false  # 设置 if 为 false，表示这个作业不会执行
+    needs:
+      - build-distribution  # 需要 build-distribution 作业先执行完成
+      - deploy-binaries  # 需要 deploy-binaries 作业先执行完成
+    runs-on: ubuntu-latest  # 运行环境
+    environment:
+      name: deploy-pypi  # 环境名称
+      url: https://pypi.org/p/Furious-GUI  # PyPI 页面链接
+    permissions:
+      id-token: write  # 必须的权限，允许向 PyPI 发布
+
+    steps:
+      # 1. 下载构建的分发包
+      - name: Download all the dists
+        uses: actions/download-artifact@v3  # 下载先前上传的分发包
+        with:
+          name: python-package-distributions  # 上传的包名
+          path: dist/  # 下载到 dist/ 目录
+
+      # 2. 将分发包发布到 PyPI
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1  # 使用 PyPI 官方的发布 action
+
+  # 作业3：在多个操作系统上部署二进制文件
+  deploy-binaries:
+    name: Deploy binaries on ${{ matrix.os }}  # 设置作业名称
+    runs-on: ${{ matrix.os }}  # 使用矩阵策略，分别在不同操作系统上运行
+    strategy:
+      matrix:
+        # os: [windows-2022, macos-13]  # 在 Windows 和 macOS 上部署
+        os: []
+
+    env:
+      PYSIDE6_LEGACY_VERSION: "6.4.3"  # 设置环境变量，指定老版本的 PySide6
+      PYSIDE6_TARGET_VERSION: "6.8.1"  # 设置目标版本的 PySide6
+
+    steps:
+      # 1. Checkout 仓库代码
+      - uses: actions/checkout@v4  # 使用 checkout action 拉取代码
+
+
+      # 3. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      # 4. 创建并激活 Python 虚拟环境
+      - name: Set up Python venv
+        run: |
+          python3 -m venv .venv 
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            source .venv/bin/activate  
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            .venv/Scripts/activate  
+          else
+            echo "$RUNNER_OS not supported"  
+            exit 1
+          fi
+          python3 --version   
+
+      # 5. 安装 macOS 特定的依赖
+      - name: Install macOS dependencies
+        run: |
+          brew install create-dmg  # 在 macOS 上安装 create-dmg
+        if: runner.os == 'macOS'  # 仅在 macOS 上执行
+
+      # 6. 移除 macOS Intel 架构上的问题依赖
+      - name: Remove problematic brew libs on Intel Mac
+        run: |
+          brew remove --force --ignore-dependencies openssl@3  # 移除过期的 OpenSSL 库
+          brew cleanup openssl@3  # 清理依赖
+        if: runner.os == 'macOS' && runner.arch == 'X64'  # 仅在 Intel 架构的 macOS 上执行
+
+      # 7. 安装 setuptools 和 wheel
+      - name: Install setuptools, wheel
+        run: |
+          python3 -m pip install setuptools wheel  # 安装构建工具
+
+      # 8. 安装 PySide6-Essentials
+      - name: Install PySide6-Essentials
+        run: |
+          python3 -m pip install PySide6-Essentials==$PYSIDE6_TARGET_VERSION 
+
+      # 9. 安装项目依赖
+      - name: Install requirements.txt
+        run: |
+          python3 -m pip install -r requirements.txt
+#
+#      # 10. 安装 numpy<2
+#      - name: Install numpy<2
+#        run: |
+#          # 安装 numpy 版本小于 2 的版本，以确保兼容性
+#          python3 -m pip install "numpy<2"
+#
+      - name: Install nuitka, imageio
+        run: |
+          python3 -m pip install nuitka imageio
+#
+#      - name: Set up go 1.20
+#        uses: actions/setup-go@v4
+#        with:
+#          # 设置 Go 语言版本为 1.20，并确保使用最新版本
+#          go-version: "1.20"
+#          check-latest: true
+#
+#      - name: Install go 1.20 dependencies
+#        run: |
+#          # 安装 Go 语言版本 1.20 的依赖，并验证 Go 版本是否正确安装
+#          go version
+#          # 安装 hysteria 模块的版本大于 1.3.5
+#          python3 -m pip install "hysteria > 1.3.5"
+#
+#      - name: Set up go 1.23
+#        uses: actions/setup-go@v4
+#        with:
+#          # 设置 Go 语言版本为 1.23，并确保使用最新版本
+#          go-version: "1.23"
+#          check-latest: true
+#
+#      - name: Install go 1.23 dependencies
+#        run: |
+#          # 安装 Go 语言版本 1.23 的依赖，并验证 Go 版本是否正确安装
+#          go version
+#          # 安装 Xray-core 和 hysteria2 模块，确保它们的版本满足要求
+#          python3 -m pip install "Xray-core >= 1.8.8" "hysteria2 >= 2.0.4" "tun2socks > 2.5.2"
+
+
+#      - name: Run deploy script
+#        run: python3 Deploy.py
+        # 执行部署脚本，开始部署最新的版本
+
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: binary-distributions
+          path: |
+            *.zip
+            *.dmg
+
+  github-release:
+    name: >-
+      Upload to GitHub Release
+    needs:
+      - deploy-binaries
+      # 依赖于 deploy-binaries 作业，即所有二进制文件都已准备好后才能执行
+      # - publish-to-pypi  # 如果需要将发布内容上传到 PyPI，取消此行注释
+    runs-on: ubuntu-latest
+    # 在 Ubuntu 最新版本的虚拟环境中运行发布作业
+
+    permissions:
+      contents: write  # 需要写入 GitHub 内容库权限，用于创建发布
+      id-token: write  # 需要写入 id-token 权限，用于与 GitHub 安全合作 (Sigstore)
+
+    steps:
+      # 确保 Git 仓库已经被检出
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Git
-        run: |
-          git fetch --tags  # 确保我们有所有的标签
+      # 下载之前上传到 GitHub Actions 的二进制文件分发包
+#      - name: Download all the dists
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: binary-distributions
+#          path: dist/
 
 
-      - name: Get commit history between tags
-        id: changes
-        run: |
-          # 获取两个标签之间的所有提交
-          COMMITS=$(git log)
-          echo "$COMMITS"
-
-      - name: Create GitHub Release
+      # 使用 git log 自动生成 Release Notes
+      - name: Generate Release Notes
+        id: generate_notes
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create $GITHUB_REF_NAME \
-            --repo $GITHUB_REPOSITORY \
-            --notes "${{ steps.changes.outputs.commit_changes }}" \
-            --prerelease \
-            --generate-notes \
-            --title "Furious ${{ github.ref_name }}"
+          echo "## 🚀 Release Notes" > release_notes.md
+          git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
+          cat release_notes.md  
+          echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV
+        shell: bash
+
+        # 打印 RELEASE_NOTES 的值
+      - name: Print RELEASE_NOTES
+        run: |
+          echo "Release Notes are as follows:"
+          echo "${{ env.RELEASE_NOTES }}"  # 正确引用环境变量
+        
+
+      # 在创建 Release 时使用动态生成的 Release Notes
+#      - name: Create GitHub Release
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+#        id: create_release
+#        uses: actions/create-release@v1
+#        with:
+#          tag_name: ${{ github.ref_name }}  # 使用当前标签名
+#          release_name: Release ${{ github.ref_name }}  # Release 的名称
+#          body: ${{ steps.generate_notes.outputs.body }}  # 使用生成的 release notes
+#          draft: false  # 设置为 false，表示不是草稿
+#          prerelease: false  # 设置为 false，表示不是预发布
+
+#      - name: Upload artifact to GitHub Release
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}  # 使用 GitHub Secrets 中的 RELEASE_TOKEN
+#        run: >-
+#          gh release upload
+#          '${{ github.ref_name }}' dist/**
+#          --repo '${{ github.repository }}'
