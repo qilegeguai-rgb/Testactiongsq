@@ -220,16 +220,34 @@ jobs:
 #          path: dist/
 
 
-        # 使用 git log 自动生成 Release Notes,生成发布说明并设置为环境变量
       - name: Generate Release Notes
         id: generate_notes
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          echo "## 🚀 Release Notes" > release_notes.md
-          git log $(git describe --tags --abbrev=0)..HEAD --reverse --pretty=format:"- %s (by %an)" >> release_notes.md
-          cat release_notes.md  # 打印 release_notes.md 文件内容
-          echo "RELEASE_NOTES=$(cat release_notes.md)" >> $GITHUB_ENV  # 将内容写入环境变量
+          # 初始化 Release Notes 变量
+          RELEASE_NOTES="## 🚀 Release Notes\n"
+      
+          # 检查是否有标签
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+      
+          # 如果有标签，则获取标签之间的提交，否则直接从 HEAD 开始
+          if [ "$LATEST_TAG" != "none" ]; then
+            echo "Generating release notes from tag $LATEST_TAG to HEAD"
+            # 获取标签到 HEAD 之间的提交并附加到变量 RELEASE_NOTES
+            RELEASE_NOTES="$RELEASE_NOTES$(git log $LATEST_TAG..HEAD --reverse --pretty=format:"- %s (by %an)\n")"
+          else
+            echo "No tags found. Generating release notes from the beginning."
+            # 如果没有标签，则从所有提交开始生成 Release Notes
+            RELEASE_NOTES="$RELEASE_NOTES$(git log --reverse --pretty=format:"- %s (by %an)\n")"
+          fi
+      
+          # 打印生成的 release notes
+          echo "$RELEASE_NOTES"
+      
+          # 将生成的 Release Notes 存入 GitHub 环境变量
+          echo "RELEASE_NOTES=$RELEASE_NOTES" >> $GITHUB_ENV
+        shell: bash
 
       # 打印 RELEASE_NOTES 的值
       - name: Print RELEASE_NOTES
